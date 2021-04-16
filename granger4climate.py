@@ -1,4 +1,10 @@
-"""  """
+"""
+Main script containing code to apply Granger causality tests to
+
+(1) 1D timeseries of two variables
+(2) 3D gridded data with shape (time, lat, lon) of two variables
+
+"""
 
 import xarray as xr
 import numpy as np
@@ -17,6 +23,7 @@ import cartopy.feature as cf
 
 class G4C:
     def __init__(self, x, y, xvar, yvar):
+        """  """
         self.x = x
         self.y = y
         self.xvar = xvar
