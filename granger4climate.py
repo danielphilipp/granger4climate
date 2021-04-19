@@ -515,8 +515,7 @@ class G4CPlotting:
             plt.savefig(figname)
 
     def _circle_bounds(self):
-            """
-            """
+            """ Calculate circle bound for NorthPolarStereo plotting. """
             theta = np.linspace(0, 2*np.pi, 100)
             center, radius = [0.5, 0.5], 0.5
             verts = np.vstack([np.sin(theta), np.cos(theta)]).T
@@ -524,8 +523,7 @@ class G4CPlotting:
             return circle
 
     def _create_scat(self, p, lat, lon):
-        """
-        """
+        """ Get masked lat/lon for masking='mark' scatter plotting.  """
         idy, idx = np.nonzero(p > 0.05)
 
         for k in range(0, idx.shape[0]):
@@ -535,6 +533,7 @@ class G4CPlotting:
         return idx, idy
 
     def _get_regular_latlon(self, extent, res):
+        """ Get regular grid lat/lon from extent. For masking='mark'. """
         minlon = extent[0] + res/2
         maxlon = extent[1] - res/2
         minlat = extent[2] + res/2
@@ -546,6 +545,28 @@ class G4CPlotting:
 
     def plot_2d_maps(self, orders, proj_params, figname=None, masking='False',
                      pval_lim=0.05, lims=None):
+        """
+        Plot 2D maps of Granger Causality F-statistics.
+
+        orders (list): List of model orders to be shown. (<= maxlag)
+        proj_params (dict): Dictionary of projection parameters for plotting:
+                            - iproj = cartopy.crs.YourInputProjection
+                            - oproj = cartopy.crs.YourOutputProjection
+                            - extent = [minlon, maxlon, minlat, maxlat]
+                            - resolution = Grid resolution in degrees
+        figname (optional, str): Filepath to save your file. If not provided
+                                 figure is shown and not saved.
+        masking (optional, str): How to handle insiginificant pixels:
+                                 - False (default) = No masking
+                                 - remove = Remove insignificant pixels
+                                 - mark = Mark insiginificant pixels with
+                                          overlayed dotted grid
+        pval_lim (optional, float): Limit for pvalue masking. Default is 0.05.
+        lims (optional, list): List of tuples defining vmins and vmaxs for
+                               every order. Has len(orders). Default is
+                               automatic. E.g.
+                               [(0, 18), (0, 8) ...]
+        """
 
         if lims is None:
             lims = [(None, None)] * len(orders)
