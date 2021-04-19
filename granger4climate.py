@@ -104,7 +104,7 @@ class G4C:
             error = True
 
         if not error:
-            if (p_value_x > self.spl or p_value_y > self.spl):
+            if p_value_x > self.spl or p_value_y > self.spl:
                 if not self.is_2d:
                     print('Timeseries not stationary. Applying 1st '
                           'order differencing\n')
@@ -523,7 +523,28 @@ class G4CPlotting:
             circle = mpath.Path(verts * radius + center)
             return circle
 
-    def plot_2d_maps(self, orders, proj_params, figname=None, masking=False,
+    def _create_scat(self, p, lat, lon):
+        """
+        """
+        idy, idx = np.nonzero(p > 0.05)
+
+        for k in range(0, idx.shape[0]):
+            idx[k] = lon[idx[k]]
+            idy[k] = lat[idy[k]]
+
+        return idx, idy
+
+    def _get_regular_latlon(self, extent, res):
+        minlon = extent[0] + res/2
+        maxlon = extent[1] - res/2
+        minlat = extent[2] + res/2
+        maxlat = extent[3] - res/2
+        lon = np.arange(minlon, maxlon+res, res)
+        lat = np.arange(minlat, maxlat + res, res)
+
+        return lat, lon
+
+    def plot_2d_maps(self, orders, proj_params, figname=None, masking='False',
                      pval_lim=0.05, lims=None):
 
         if lims is None:
@@ -537,9 +558,13 @@ class G4CPlotting:
         pxy = '{}_{}_pval'.format(self.xvar, self.yvar)
         pyx = '{}_{}_pval'.format(self.yvar, self.xvar)
 
-        if masking:
+        if masking == 'remove':
             ds[Fxy] = xr.where(ds[pxy] > pval_lim, np.nan, ds[Fxy])
             ds[Fyx] = xr.where(ds[pyx] > pval_lim, np.nan, ds[Fyx])
+
+        if masking == 'mark':
+            lat, lon = self._get_regular_latlon(proj_params['extent'],
+                                                proj_params['resolution'])
 
         if isinstance(proj_params['oproj'], ccrs.NorthPolarStereo):
             circle = self._circle_bounds()
@@ -552,24 +577,29 @@ class G4CPlotting:
             ax = fig.add_subplot(2, len(orders), cnt+1,
                                  projection=proj_params['oproj'])
 
-            ax.set_extent(proj_params['extent'], crs=proj_params['iproj'])
-
             if isinstance(proj_params['oproj'], ccrs.NorthPolarStereo):
                 ax.set_boundary(circle, transform=ax.transAxes)
 
             ax.set_title(Fyx + ' | Order: {}'.format(order), fontsize=16,
                          fontweight="bold")
-            ax.add_feature(cf.LAND, color="darkgray")
-            ax.coastlines(resolution="50m")
+            ax.add_feature(cf.LAND, color="darkgray", zorder=300)
+            ax.add_feature(cf.OCEAN, color="#000000",zorder=50)
+            ax.coastlines(resolution="50m", zorder=350)
             ax.gridlines(linestyle=":", alpha=0.5, color="black")
-
+            ax.set_extent(proj_params['extent'], crs=proj_params['iproj'])
 
             ims = ax.imshow(ds[Fxy][order-1, :, :], origin='lower',
                             extent=proj_params['extent'],
                             cmap=cmap,
                             transform=proj_params['iproj'],
                             vmin=lims[cnt][0],
-                            vmax=lims[cnt][1])
+                            vmax=lims[cnt][1],
+                            zorder=100)
+            if masking == 'mark':
+                sctlon, sctlat = self._create_scat(ds[pxy][order-1, :, :], lat, lon)
+                sct = ax.scatter(x=sctlon[::5], y=sctlat[::5], s=0.1, c="gray",
+                                 marker="o", transform=proj_params['iproj'],
+                                 zorder=110)
 
             cb = plt.colorbar(ims)
             cb.set_label("F-Statistic", size=14)
@@ -579,23 +609,31 @@ class G4CPlotting:
             ax = fig.add_subplot(2, len(orders), len(orders) + cnt+1,
                                  projection=proj_params['oproj'])
 
-            ax.set_extent(proj_params['extent'], crs=proj_params['iproj'])
-
             if isinstance(proj_params['oproj'], ccrs.NorthPolarStereo):
                 ax.set_boundary(circle, transform=ax.transAxes)
 
             ax.set_title(Fyx + ' | Order: {}'.format(order), fontsize=16,
                          fontweight="bold")
-            ax.add_feature(cf.LAND, color="darkgray")
-            ax.coastlines(resolution="50m")
+            ax.add_feature(cf.LAND, color="darkgray", zorder=300)
+            ax.add_feature(cf.OCEAN, color="#000000",zorder=50)
+            ax.coastlines(resolution="50m", zorder=350)
             ax.gridlines(linestyle=":", alpha=0.5, color="black")
+            ax.set_extent(proj_params['extent'], crs=proj_params['iproj'])
 
             ims = ax.imshow(ds[Fyx][order-1, :, :],
                             extent=proj_params['extent'],
                             cmap=cmap,
                             transform=proj_params['iproj'],
                             vmin=lims[cnt][0],
-                            vmax=lims[cnt][1])
+                            vmax=lims[cnt][1],
+                            zorder=100)
+
+            if masking == 'mark':
+                sctlon, sctlat = self._create_scat(ds[pyx][order-1, :, :], lat, lon)
+                sct = ax.scatter(x=sctlon[::5], y=sctlat[::5], s=0.1, c="gray",
+                                 marker="o", transform=proj_params['iproj'],
+                                 zorder=110)
+
             cb = plt.colorbar(ims)
             cb.set_label("F-Statistic", size=14)
 
