@@ -355,12 +355,14 @@ class G4C:
         err2 = False
 
         try:
-            gct1 = grangercausalitytests(data1, maxlag=self.maxlag, verbose=False)
+            gct1 = grangercausalitytests(data1,
+                                         maxlag=self.maxlag, verbose=False)
         except:
             err1 = True
 
         try:
-            gct2 = grangercausalitytests(data2, maxlag=self.maxlag, verbose=False)
+            gct2 = grangercausalitytests(data2,
+                                         maxlag=self.maxlag, verbose=False)
         except:
             err2 = True
 
@@ -446,7 +448,8 @@ class G4CPlotting:
 
         ax1 = ax.twinx()
         ax1.add_patch(
-            mpatch.Rectangle((0, 0), self.nlags, 0.05, color="red", alpha=0.15))
+            mpatch.Rectangle((0, 0), self.nlags, 0.05,
+                             color="red", alpha=0.15))
         plt3 = ax1.plot(x, self.ds[avail_pvals[0]],
                         color="r", label=avail_pvals[0], marker="^", ls="-",
                         markersize=6, linewidth=3)
@@ -459,7 +462,8 @@ class G4CPlotting:
         # ax1.axhline(y=0.05,color="r",linestyle=":",linewidth=3)
         ax1.tick_params(labelsize=14)
 
-        ax1.annotate(" ", xy=(opt_model_order, 0), xytext=(opt_model_order, -0.01),
+        ax1.annotate(" ", xy=(opt_model_order, 0),
+                     xytext=(opt_model_order, -0.01),
                      arrowprops=dict(facecolor="black"))
 
         plts = plt1 + plt2 + plt3 + plt4
@@ -553,7 +557,8 @@ class G4CPlotting:
             if isinstance(proj_params['oproj'], ccrs.NorthPolarStereo):
                 ax.set_boundary(circle, transform=ax.transAxes)
 
-            ax.set_title(Fyx + ' | Order: {}'.format(order), fontsize=16, fontweight="bold")
+            ax.set_title(Fyx + ' | Order: {}'.format(order), fontsize=16,
+                         fontweight="bold")
             ax.add_feature(cf.LAND, color="darkgray")
             ax.coastlines(resolution="50m")
             ax.gridlines(linestyle=":", alpha=0.5, color="black")
@@ -565,7 +570,7 @@ class G4CPlotting:
                             transform=proj_params['iproj'],
                             vmin=lims[cnt][0],
                             vmax=lims[cnt][1])
-            
+
             cb = plt.colorbar(ims)
             cb.set_label("F-Statistic", size=14)
 
@@ -579,7 +584,8 @@ class G4CPlotting:
             if isinstance(proj_params['oproj'], ccrs.NorthPolarStereo):
                 ax.set_boundary(circle, transform=ax.transAxes)
 
-            ax.set_title(Fyx + ' | Order: {}'.format(order), fontsize=16, fontweight="bold")
+            ax.set_title(Fyx + ' | Order: {}'.format(order), fontsize=16,
+                         fontweight="bold")
             ax.add_feature(cf.LAND, color="darkgray")
             ax.coastlines(resolution="50m")
             ax.gridlines(linestyle=":", alpha=0.5, color="black")
