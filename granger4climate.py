@@ -183,25 +183,39 @@ class G4C:
                 for j in range(londim):
                     xtmp = x[:, i, j]
                     ytmp = y[:, i, j]
-                    xtmp, ytmp = self._stationarity(xtmp, ytmp)
-                    xtmp = ma.masked_invalid(xtmp)
-                    ytmp = ma.masked_invalid(ytmp)
-                    xtmp = self._standardize(xtmp)
-                    ytmp = self._standardize(ytmp)
-                    xtmp = ma.masked_invalid(xtmp)
-                    ytmp = ma.masked_invalid(ytmp)
 
-                    # f_value_01, p_value_01, f_value_10, p_value_10
-                    res = self._gc_test(xtmp, ytmp)
+                    has_invalid_x = ma.count_masked(xtmp) > 0
+                    has_invalid_y = ma.count_masked(ytmp) > 0
 
-                    if self.do_correlation:
-                        cor_r[i, j], cor_p[i, j] = self._correlate(xtmp, ytmp)
+                    if not has_invalid_x and not has_invalid_y:
 
-                    for lag in range(maxlag-1):
-                        x_causing_y[lag, 0, i, j] = res[2][lag]
-                        x_causing_y[lag, 1, i, j] = res[3][lag]
-                        y_causing_x[lag, 0, i, j] = res[0][lag]
-                        y_causing_x[lag, 1, i, j] = res[1][lag]
+                        xtmp, ytmp = self._stationarity(xtmp, ytmp)
+                        xtmp = ma.masked_invalid(xtmp)
+                        ytmp = ma.masked_invalid(ytmp)
+                        xtmp = self._standardize(xtmp)
+                        ytmp = self._standardize(ytmp)
+                        xtmp = ma.masked_invalid(xtmp)
+                        ytmp = ma.masked_invalid(ytmp)
+
+                        # f_value_01, p_value_01, f_value_10, p_value_10
+                        res = self._gc_test(xtmp, ytmp)
+
+                        if self.do_correlation:
+                            cor_r[i, j], cor_p[i, j] = self._correlate(xtmp, ytmp)
+
+                        for lag in range(maxlag-1):
+                            x_causing_y[lag, 0, i, j] = res[2][lag]
+                            x_causing_y[lag, 1, i, j] = res[3][lag]
+                            y_causing_x[lag, 0, i, j] = res[0][lag]
+                            y_causing_x[lag, 1, i, j] = res[1][lag]
+                    else:
+                        for lag in range(maxlag - 1):
+                            x_causing_y[lag, 0, i, j] = ma.masked
+                            x_causing_y[lag, 1, i, j] = ma.masked
+                            y_causing_x[lag, 0, i, j] = ma.masked
+                            y_causing_x[lag, 1, i, j] = ma.masked
+                        cor_r[i,j] = ma.masked
+                        cor_p[i, j] = ma.masked
 
             x_causing_y = np.squeeze(ma.masked_invalid(x_causing_y))
             y_causing_x = np.squeeze(ma.masked_invalid(y_causing_x))
@@ -506,7 +520,10 @@ class G4CPlotting:
             return circle
 
     def plot_2d_maps(self, orders, proj_params, figname=None, masking=False,
-                     pval_lim=0.05):
+                     pval_lim=0.05, lims=None):
+
+        if lims is None:
+            lims = [(None, None)] * len(orders)
 
         ds = self.ds
 
@@ -542,7 +559,13 @@ class G4CPlotting:
             ax.gridlines(linestyle=":", alpha=0.5, color="black")
 
 
-            ims = ax.imshow(ds[Fxy][order-1, :, :], extent=proj_params['extent'], cmap=cmap, transform=proj_params['iproj'])
+            ims = ax.imshow(ds[Fxy][order-1, :, :], origin='lower',
+                            extent=proj_params['extent'],
+                            cmap=cmap,
+                            transform=proj_params['iproj'],
+                            vmin=lims[cnt][0],
+                            vmax=lims[cnt][1])
+            
             cb = plt.colorbar(ims)
             cb.set_label("F-Statistic", size=14)
 
@@ -561,7 +584,12 @@ class G4CPlotting:
             ax.coastlines(resolution="50m")
             ax.gridlines(linestyle=":", alpha=0.5, color="black")
 
-            ims = ax.imshow(ds[Fyx][order-1, :, :], extent=proj_params['extent'], cmap=cmap, transform=proj_params['iproj'])
+            ims = ax.imshow(ds[Fyx][order-1, :, :],
+                            extent=proj_params['extent'],
+                            cmap=cmap,
+                            transform=proj_params['iproj'],
+                            vmin=lims[cnt][0],
+                            vmax=lims[cnt][1])
             cb = plt.colorbar(ims)
             cb.set_label("F-Statistic", size=14)
 
