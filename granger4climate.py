@@ -657,5 +657,7 @@ class G4CPlotting:
 
             cb = plt.colorbar(ims)
             cb.set_label("F-Statistic", size=14)
-
-        plt.show()
+        if figname is None:
+            plt.show()
+        else:
+            plt.savefig(figname)
