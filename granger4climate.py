@@ -20,7 +20,6 @@ import cartopy.crs as ccrs
 import cartopy.feature as cf
 
 
-
 class G4C:
     def __init__(self, x, y, xvar, yvar):
         """  """
